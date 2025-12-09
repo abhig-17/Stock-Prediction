@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Stock Dashboard{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- INTERNAL CSS ONLY -->
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #ffffff);
+            color: #222;
+            min-height: 100vh;
+        }
+
+        a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Top navbar */
+        .navbar {
+            width: 100%;
+            background: #0b1120;
+            color: #f8fafc;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar-title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-user {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .btn-nav {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #38bdf8;
+            background: transparent;
+            color: #e0f2fe;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-nav:hover {
+            background: #38bdf8;
+            color: #0b1120;
+        }
+
+        /* Page wrapper */
+        .page-wrapper {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 16px;
+        }
+
+        /* Flash messages */
+        .messages {
+            margin-bottom: 12px;
+        }
+        .message {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .message-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .message-error, .message-danger {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+        .message-info {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        /* ===== AUTH PAGES (login + signup) ===== */
+        .auth-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 60px);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            padding: 30px 26px;
+            border-radius: 14px;
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.15);
+        }
+
+        .auth-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 20px;
+        }
+
+        .auth-field {
+            margin-bottom: 14px;
+        }
+
+        .auth-label {
+            display: block;
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #374151;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .auth-input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 999px;
+            border: none;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 6px;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .auth-footer-text {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .auth-footer-text a {
+            font-weight: 600;
+        }
+
+        .auth-errors {
+            margin-top: 8px;
+            font-size: 13px;
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+
+        /* ===== DASHBOARD PAGE ===== */
+        .dashboard-header {
+            margin-bottom: 18px;
+        }
+
+        .dashboard-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 18px 16px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.10);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            text-align: left;
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) td {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-muted {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-small {
+            padding: 4px 10px;
+            border-radius: 999px;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-subscribe {
+            background: #22c55e;
+            color: #ffffff;
+        }
+        .btn-subscribe:hover {
+            background: #16a34a;
+        }
+
+        .btn-unsubscribe {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        .btn-unsubscribe:hover {
+            background: #b91c1c;
+        }
+
+        .empty-text {
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+            padding: 10px 4px;
+        }
+
+        .price-number {
+            font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        @media (max-width: 800px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .page-wrapper {
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <div class="navbar">
+        <div class="navbar-title">
+            Stock Broker Client Dashboard
+        </div>
+        <div class="navbar-right">
+            {% if user.is_authenticated %}
+                <div class="navbar-user">
+                    Logged in as <strong>{{ user.username }}</strong>
+                </div>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-nav">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-nav">Login</a>
+                <a href="{% url 'signup' %}" class="btn-nav">Sign Up</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

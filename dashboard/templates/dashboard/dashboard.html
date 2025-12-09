@@ -1,0 +1,124 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="dashboard-title">My Stock Subscriptions</div>
+    <div class="dashboard-subtitle">
+        Subscribe to any of the supported stocks and watch their prices update live every second.
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- LEFT: Subscription table -->
+    <div class="card">
+        <div class="card-title">Available Stocks</div>
+        <div class="card-subtitle">
+            Supported tickers: GOOG, TSLA, AMZN, META, NVDA
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Name</th>
+                    <th>Subscribed</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stock in stocks %}
+                <tr>
+                    <td>{{ stock.ticker }}</td>
+                    <td>{{ stock.name }}</td>
+                    <td>
+                        {% if stock.ticker in subscribed_tickers %}
+                            <span class="badge badge-success">Yes</span>
+                        {% else %}
+                            <span class="badge badge-muted">No</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'toggle_subscription' stock.ticker %}">
+                            {% csrf_token %}
+                            {% if stock.ticker in subscribed_tickers %}
+                                <button type="submit" class="btn-small btn-unsubscribe">
+                                    Unsubscribe
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn-small btn-subscribe">
+                                    Subscribe
+                                </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="empty-text">
+                        No stocks available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- RIGHT: Live price card -->
+    <div class="card">
+        <div class="card-title">Live Prices</div>
+        <div class="card-subtitle">
+            Shows only your subscribed stocks. Refreshes automatically every second.
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Price (USD)</th>
+                </tr>
+            </thead>
+            <tbody id="price-body">
+                <tr>
+                    <td colspan="2" class="empty-text">Loading prices…</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function fetchPrices() {
+        fetch("{% url 'api_prices' %}")
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('price-body');
+                tbody.innerHTML = '';
+
+                const tickers = Object.keys(data);
+                if (tickers.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="2" class="empty-text">No subscriptions yet. Subscribe to see prices here.</td></tr>';
+                } else {
+                    tickers.forEach(ticker => {
+                        const price = data[ticker];
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${ticker}</td>
+                            <td class="price-number">$${price}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching prices', err);
+            });
+    }
+
+    fetchPrices();
+    setInterval(fetchPrices, 1000);
+</script>
+{% endblock %}
